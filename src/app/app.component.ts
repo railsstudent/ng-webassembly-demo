@@ -2,8 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
-
-// declare function isPrime(n: number): boolean;
+import loader from '@assemblyscript/loader';
 
 @Component({
   selector: 'app-root',
@@ -13,38 +12,55 @@ import { RouterOutlet } from '@angular/router';
     <div class="container">
       <h2>Angular + WebAssembly Demo</h2>
       <p>isPrime(11): {{ isPrimeResult() }}</p>
+      <p>primeNumbers: {{ primeNumbers() }}</p>
     </div>
   `,
   styles: [],
 })
 export class AppComponent implements OnInit {
 
-  webAssemblyExports!: Promise<WebAssembly.Exports>;
-  isPrimeResult = signal([]);
+  webAssemblyExports!: any;
+  isPrimeResult = signal(false);
+  primeNumbers = signal<number[]>([])
 
   constructor(title: Title) {
     title.setTitle('Ng WebAssembly Demo');
-
-    // console.log('webAssemblyExports', this.webAssemblyExports);
   }
 
-  ngOnInit(): void {
-    // throw new Error('Method not implemented.');
+  async ngOnInit(): Promise<void> {
+    this.webAssemblyExports = await loader.instantiateStreaming(fetch('../assets/release.wasm'), { 
+      // env: {
+        // abort: function(msg: string): never {
+        //   throw new Error(msg || 'Abort called from wasm file');
+        // },
+        // "console.log": console.log
+      // }
+        module: {
+          "console.log": console.log,
+        },
+        env: {
+          abort: function() {
+            throw new Error('Abort called from wasm file');
+          },
+          // "console.log": console.log,
+          // 'console.log': (arg: number) => console.log(arg),
+        },
+        index: {
+          primeNumberLog: function(primeNumber: number) {
+            console.log(`primeNumberLog: ${primeNumber}`);
+          }
+        }
+      });
+    const a = this.webAssemblyExports.exports
 
-    this.webAssemblyExports = WebAssembly.instantiateStreaming(fetch('../assets/release.wasm'), { env: {
-      abort: function(msg: string) {
-        throw new Error(msg || 'Abort called from wasm file');
-      },
-      "console.log": console.log
-    } })
-    .then((obj) => { 
-      console.log('obj', obj);
-      return obj.instance.exports;
-    });
+    const isPrimeNumberResult = a.isPrime(97) as number;
+    console.log(this.webAssemblyExports.exports);
+    this.isPrimeResult.set(isPrimeNumberResult === 1);
 
-    this.webAssemblyExports.then((obj) => {
-      const results = (obj as any).findFirstNPrimes(5);
-      this.isPrimeResult.set(results);
-    })
+    const firstThreePrimeNumbers = a.findFirstNPrimes(3);
+    const getArray = a.__getArray;
+    
+    const convertedPrimeNumbers = getArray(firstThreePrimeNumbers);
+    this.primeNumbers.set(convertedPrimeNumbers);
   }
 }
