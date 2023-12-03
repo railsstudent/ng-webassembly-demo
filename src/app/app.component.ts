@@ -12,7 +12,10 @@ import loader from '@assemblyscript/loader';
     <div class="container">
       <h2>Angular + WebAssembly Demo</h2>
       <p>isPrime(101): {{ isPrimeNumber() }}</p>
-      <p>primeNumbers: {{ primeNumbers() }}</p>
+
+      @for(primeNumber of primeNumbers(); track primeNumber) {
+        <p>Prime number: {{ primeNumber }}</p>
+      }
     </div>
   `,
   styles: [],
