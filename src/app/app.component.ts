@@ -52,9 +52,7 @@ import loader from '@assemblyscript/loader';
   `],
 })
 export class AppComponent implements OnInit {
-
   instance!: any;
-  primeNumbers = signal<number[]>([])
   primeNumber = signal(0);
   firstN = signal(0);
 
@@ -67,7 +65,6 @@ export class AppComponent implements OnInit {
     const value = this.firstN();
     if (this.instance) {
       const { findFirstNPrimes, __getArray: getArray } = this.instance;
-      const result = findFirstNPrimes(value);
       return getArray(findFirstNPrimes(value));
     }
     return [];
@@ -92,10 +89,5 @@ export class AppComponent implements OnInit {
       }).then(({ exports }) => exports);
 
     console.log(this.instance);
-
-    // const { isPrime, findFirstNPrimes, __getArray: getArray } = this.instance;
-
-    // const primeNumberResults = getArray(findFirstNPrimes(5));
-    // this.primeNumbers.set(primeNumberResults);
   }
 }
