@@ -34,5 +34,5 @@ export class WebAssemblyLoaderService {
     const { instance } = await loader.instantiate(bytes, imports);
 
     return instance?.exports;
-}
+  }
 }
