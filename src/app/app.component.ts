@@ -4,10 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import loader from '@assemblyscript/loader';
 
-export const getFullAssetPath = () => {
+export const getFullAssetPath = (assetName: string) => {
   const baseHref = inject(APP_BASE_HREF);
   const isEndWithSlash = baseHref.endsWith('/');
-  return `${baseHref}${isEndWithSlash ? '' : '/'}assets/`;
+  return `${baseHref}${isEndWithSlash ? '' : '/'}assets/${assetName}`;
 }
 
 @Component({
@@ -58,7 +58,7 @@ export class AppComponent implements OnInit {
   instance!: any;
   primeNumber = signal(0);
   firstN = signal(0);
-  releaseWasm = `${getFullAssetPath()}release.wasm`;
+  releaseWasm = getFullAssetPath('release.wasm');
 
   isPrimeNumber = computed(() => { 
     const value = this.primeNumber();
