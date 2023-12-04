@@ -23,8 +23,8 @@ export class WebAssemblyLoaderService {
       return this.wasmFallback(wasm, imports);
     }
 
-    const { exports } = await loader.instantiateStreaming(fetch(wasm), imports);
-    return exports;
+    const instance = await loader.instantiateStreaming(fetch(wasm), imports);
+    return instance?.exports;
   }
 
   async wasmFallback(wasm: string, imports: Imports) {
