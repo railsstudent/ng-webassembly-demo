@@ -3,6 +3,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import loader from '@assemblyscript/loader';
+import { WebAssemblyLoaderService } from './services/web-assembly-loader.service';
 
 export const getFullAssetPath = (assetName: string) => {
   const baseHref = inject(APP_BASE_HREF);
@@ -56,9 +57,11 @@ export const getFullAssetPath = (assetName: string) => {
 })
 export class AppComponent implements OnInit {
   instance!: any;
+  releaseWasm = getFullAssetPath('release.wasm');
+  wasmLoader = inject(WebAssemblyLoaderService);
+
   primeNumber = signal(0);
   firstN = signal(0);
-  releaseWasm = getFullAssetPath('release.wasm');
 
   isPrimeNumber = computed(() => { 
     const value = this.primeNumber();
@@ -79,19 +82,7 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.instance = await loader.instantiateStreaming(fetch(this.releaseWasm), { 
-        env: {
-          abort: function() {
-            throw new Error('Abort called from wasm file');
-          },
-        },
-        index: {
-          primeNumberLog: function(primeNumber: number) {
-            console.log(`primeNumberLog: ${primeNumber}`);
-          }
-        }
-      }).then(({ exports }) => exports);
-
+    this.instance = await this.wasmLoader.streamWasm(this.releaseWasm);
     console.log(this.instance);
   }
 }
