@@ -18,7 +18,21 @@ const DEFAULT_IMPORTS: Imports = {
   providedIn: 'root'
 })
 export class WebAssemblyLoaderService {
-  streamWasm(wasm: string, imports = DEFAULT_IMPORTS): Promise<any> {
-    return loader.instantiateStreaming(fetch(wasm), imports).then(({ exports }) => exports);
+  async streamWasm(wasm: string, imports = DEFAULT_IMPORTS): Promise<any> {
+    if (!loader.instantiateStreaming) {
+      return this.wasmFallback(wasm, imports);
+    }
+
+    const instance = await loader.instantiateStreaming(fetch(wasm), imports);
+    return instance?.exports;
+  }
+
+  async wasmFallback(wasm: string, imports: Imports) {
+    console.log('using fallback');
+    const response = await fetch(wasm);
+    const bytes = await response?.arrayBuffer();
+    const { instance } = await loader.instantiate(bytes, imports);
+
+    return instance?.exports;
   }
 }
