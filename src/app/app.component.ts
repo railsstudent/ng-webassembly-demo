@@ -1,14 +1,21 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { APP_BASE_HREF } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import loader from '@assemblyscript/loader';
+
+export const getFullAssetPath = () => {
+  const baseHref = inject(APP_BASE_HREF);
+  const isEndWithSlash = baseHref.endsWith('/');
+  return `${baseHref}${isEndWithSlash ? '' : '/'}assets/`;
+}
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [FormsModule],
   template: `
-    <div class="container outer">
+    <div class="container outer" style="margin: 0.5rem;">
       <h2>Angular + WebAssembly Demo</h2>
       <form>
         <label for="primeNumber">
@@ -18,9 +25,9 @@ import loader from '@assemblyscript/loader';
         </label>
       </form>
 
-      <p style="margin-bottom: 0.5rem;">isPrime({{ primeNumber() }}): {{ isPrimeNumber() }}</p>
+      <p class="bottom-margin">isPrime({{ primeNumber() }}): {{ isPrimeNumber() }}</p>
 
-      <form style="margin-bottom: 0.5rem;">
+      <form>
         <label for="firstNPrimeNumbers">
           <span>Find first N prime numbers: </span>
           <input id="firstNPrimeNumbers" name="firstNPrimeNumbers" type="number"
@@ -28,26 +35,22 @@ import loader from '@assemblyscript/loader';
         </label>
       </form>
 
-      <p style="margin-bottom: 0.5rem;">First {{ firstN() }} prime numbers:</p>
+      <p class="bottom-margin">First {{ firstN() }} prime numbers:</p>
       <div class="container first-n-prime-numbers">
         @for(primeNumber of firstNPrimeNumbers(); track primeNumber) {
-          <span class="prime-number">{{ primeNumber }}</span>
+          <span style="padding: 0.25rem;">{{ primeNumber }}</span>
         }
       <div>
     </div>
   `,
   styles: [`
-    div.outer {
-      margin: 0.5rem;
-    }
-
     .first-n-prime-numbers {
       display: flex;
       flex-wrap: wrap;
     }
 
-    .prime-number {
-      padding: 0.25rem;
+    .bottom-margin {
+      margin-bottom: 0.5rem;
     }
   `],
 })
@@ -55,6 +58,7 @@ export class AppComponent implements OnInit {
   instance!: any;
   primeNumber = signal(0);
   firstN = signal(0);
+  releaseWasm = `${getFullAssetPath()}release.wasm`;
 
   isPrimeNumber = computed(() => { 
     const value = this.primeNumber();
@@ -75,7 +79,7 @@ export class AppComponent implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.instance = await loader.instantiateStreaming(fetch('../assets/release.wasm'), { 
+    this.instance = await loader.instantiateStreaming(fetch(this.releaseWasm), { 
         env: {
           abort: function() {
             throw new Error('Abort called from wasm file');
