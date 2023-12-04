@@ -1,30 +1,77 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
-import { RouterOutlet } from '@angular/router';
 import loader from '@assemblyscript/loader';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet],
+  imports: [FormsModule],
   template: `
-    <div class="container">
+    <div class="container outer">
       <h2>Angular + WebAssembly Demo</h2>
-      <p>isPrime(101): {{ isPrimeNumber() }}</p>
+      <form>
+        <label for="primeNumber">
+          <span>Input an positive integer: </span>
+          <input id="primeNumber" name="primeNumber" type="number"
+            [ngModel]="primeNumber()" (ngModelChange)="primeNumber.set($event)" />
+        </label>
+      </form>
 
-      @for(primeNumber of primeNumbers(); track primeNumber) {
-        <p>Prime number: {{ primeNumber }}</p>
-      }
+      <p style="margin-bottom: 0.5rem;">isPrime({{ primeNumber() }}): {{ isPrimeNumber() }}</p>
+
+      <form style="margin-bottom: 0.5rem;">
+        <label for="firstNPrimeNumbers">
+          <span>Find first N prime numbers: </span>
+          <input id="firstNPrimeNumbers" name="firstNPrimeNumbers" type="number"
+            [ngModel]="firstN()" (ngModelChange)="firstN.set($event)" />
+        </label>
+      </form>
+
+      <p style="margin-bottom: 0.5rem;">First {{ firstN() }} prime numbers:</p>
+      <div class="container first-n-prime-numbers">
+        @for(primeNumber of firstNPrimeNumbers(); track primeNumber) {
+          <span class="prime-number">{{ primeNumber }}</span>
+        }
+      <div>
     </div>
   `,
-  styles: [],
+  styles: [`
+    div.outer {
+      margin: 0.5rem;
+    }
+
+    .first-n-prime-numbers {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .prime-number {
+      padding: 0.25rem;
+    }
+  `],
 })
 export class AppComponent implements OnInit {
 
   instance!: any;
-  isPrimeNumber = signal(false);
   primeNumbers = signal<number[]>([])
+  primeNumber = signal(0);
+  firstN = signal(0);
+
+  isPrimeNumber = computed(() => { 
+    const value = this.primeNumber();
+    return this.instance ? this.instance.isPrime(value) === 1 : false
+  });
+
+  firstNPrimeNumbers = computed(() => {
+    const value = this.firstN();
+    if (this.instance) {
+      const { findFirstNPrimes, __getArray: getArray } = this.instance;
+      const result = findFirstNPrimes(value);
+      return getArray(findFirstNPrimes(value));
+    }
+    return [];
+  });
 
   constructor(title: Title) {
     title.setTitle('Ng WebAssembly Demo');
@@ -42,16 +89,13 @@ export class AppComponent implements OnInit {
             console.log(`primeNumberLog: ${primeNumber}`);
           }
         }
-      });
+      }).then(({ exports }) => exports);
 
-    const { exports } = this.instance;
-    console.log(exports);
+    console.log(this.instance);
 
-    const { isPrime, findFirstNPrimes, __getArray: getArray } = exports;
+    // const { isPrime, findFirstNPrimes, __getArray: getArray } = this.instance;
 
-    this.isPrimeNumber.set(isPrime(81) === 1);
-
-    const primeNumberResults = getArray(findFirstNPrimes(5));
-    this.primeNumbers.set(primeNumberResults);
+    // const primeNumberResults = getArray(findFirstNPrimes(5));
+    // this.primeNumbers.set(primeNumberResults);
   }
 }
