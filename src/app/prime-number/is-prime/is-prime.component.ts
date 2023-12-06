@@ -1,4 +1,4 @@
-import { Component, Input, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -15,11 +15,8 @@ import { FormsModule } from '@angular/forms';
     </form>
     <p class="bottom-margin">isPrime({{ primeNumber() }}): {{ isPrimeNumber() }}</p>
   `,
-  styles: `
-   .bottom-margin {
-      margin-bottom: 0.5rem;
-    }
-  `
+  styles: ``,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IsPrimeComponent {
   @Input({ required: true })

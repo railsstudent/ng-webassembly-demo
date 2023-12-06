@@ -1,4 +1,4 @@
-import { Component, Input, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -15,22 +15,19 @@ import { FormsModule } from '@angular/forms';
     </form>
 
     <p class="bottom-margin">First {{ firstN() }} prime numbers:</p>
-    <div class="container first-n-prime-numbers">
+    <div class="container first-n-prime-numbers bottom-margin">
       @for(primeNumber of firstNPrimeNumbers(); track primeNumber) {
         <span style="padding: 0.25rem;">{{ primeNumber }}</span>
       }
     <div>
   `,
   styles: `
-    .bottom-margin {
-      margin-bottom: 0.5rem;
-    }
-
     .first-n-prime-numbers {
       display: flex;
       flex-wrap: wrap;
     }
-  `
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FindFirstNPrimesComponent {
   @Input({ required: true })
